@@ -9,7 +9,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "La chaîne de connexion 'DefaultConnection' est introuvable.");
+        "La chaÃ®ne de connexion 'DefaultConnection' est introuvable.");
 }
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -49,14 +49,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-
-
 
 app.MapPost("/api/companies", async (CreateCompanyRequest request, AppDbContext db) =>
 {
@@ -109,7 +101,7 @@ app.MapPost("/api/customers", async (CreateCustomerRequest request, AppDbContext
     {
         return Results.BadRequest(new
         {
-            message = "L'entreprise spécifiée n'existe pas."
+            message = "L'entreprise spÃ©cifiÃ©e n'existe pas."
         });
     }
 
@@ -377,7 +369,3 @@ record UpdateCustomerRequest(
     string City,
     string PostalCode,
     string Country);
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
