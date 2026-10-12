@@ -1,4 +1,4 @@
-﻿# BizFlow
+# BizFlow
 
 A business management REST API built with ASP.NET Core 8 and PostgreSQL.
 
@@ -121,3 +121,21 @@ dotnet test BizFlow.sln
 ## License
 
 No license has been added yet. All rights are reserved unless a license is provided.
+
+## Project Status
+
+**Status:** In progress.
+
+The current version provides company and customer management endpoints, PostgreSQL persistence, Swagger documentation, and automated tests.
+
+### Roadmap
+
+Planned improvements:
+
+- [ ] Implement application use cases and CQRS with MediatR.
+- [ ] Add JWT-based authentication and authorization.
+- [ ] Enforce company-level data isolation and access control.
+- [ ] Add GitHub Actions CI for automated builds and tests.
+- [ ] Improve API validation and integration test coverage.
+
+These items are planned and are not yet represented as completed features.
