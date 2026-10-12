@@ -1,3 +1,7 @@
+using BizFlow.Application.Customers.Commands;
+using BizFlow.Application.Customers.Interfaces;
+using BizFlow.Infrastructure.Customers;
+using MediatR;
 using BizFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using BizFlow.Domain.Common;
@@ -11,7 +15,12 @@ if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException(
         "La chaîne de connexion 'DefaultConnection' est introuvable.");
 }
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateCustomerCommand).Assembly));
 
+builder.Services.AddScoped<
+    ICustomerCreationRepository,
+    CustomerCreationRepository>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -91,36 +100,41 @@ app.MapPost("/api/companies", async (CreateCompanyRequest request, AppDbContext 
 .WithName("CreateCompany")
 .WithOpenApi();
 
-
-app.MapPost("/api/customers", async (CreateCustomerRequest request, AppDbContext db) =>
+app.MapPost("/api/customers", async (
+    CreateCustomerRequest request,
+    ISender sender) =>
 {
-    var companyExists = await db.Companies
-        .AnyAsync(company => company.Id == request.CompanyId);
-
-    if (!companyExists)
-    {
-        return Results.BadRequest(new
-        {
-            message = "L'entreprise spécifiée n'existe pas."
-        });
-    }
-
-    Customer customer;
-
     try
     {
-        var address = new Address(
-            request.Street,
-            request.City,
-            request.PostalCode,
-            request.Country);
-
-        customer = Customer.Create(
+        var command = new CreateCustomerCommand(
             request.CompanyId,
             request.Name,
             request.Email,
-            address,
+            request.Street,
+            request.City,
+            request.PostalCode,
+            request.Country,
             request.Phone);
+
+        var result = await sender.Send(command);
+
+        return Results.Created($"/api/customers/{result.Id}", new
+        {
+            result.Id,
+            result.CompanyId,
+            result.Name,
+            result.Email,
+            result.Phone,
+            BillingAddress = new
+            {
+                result.Street,
+                result.City,
+                result.PostalCode,
+                result.Country
+            },
+            result.IsActive,
+            result.CreatedAtUtc
+        });
     }
     catch (ArgumentException ex)
     {
@@ -129,27 +143,6 @@ app.MapPost("/api/customers", async (CreateCustomerRequest request, AppDbContext
             message = ex.Message
         });
     }
-
-    db.Customers.Add(customer);
-    await db.SaveChangesAsync();
-
-    return Results.Created($"/api/customers/{customer.Id}", new
-    {
-        customer.Id,
-        customer.CompanyId,
-        customer.Name,
-        customer.Email,
-        customer.Phone,
-        BillingAddress = new
-        {
-            customer.BillingAddress.Street,
-            customer.BillingAddress.City,
-            customer.BillingAddress.PostalCode,
-            customer.BillingAddress.Country
-        },
-        customer.IsActive,
-        customer.CreatedAtUtc
-    });
 })
 .WithName("CreateCustomer")
 .WithOpenApi();
